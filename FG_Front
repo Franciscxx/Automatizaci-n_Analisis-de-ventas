@@ -1,1 +1,196 @@
-'aqui voy a desarrollar la facturación global
+Attribute VB_Name = "Module1"
+Sub FG_INT()
+Attribute FG_INT.VB_ProcData.VB_Invoke_Func = " \n14"
+
+'Con estas lineas borramos las columnas de informacion que no necesitamos
+
+Range("A1:E1").Select
+Range(Selection, Selection.End(xlDown)).Select
+Selection.ClearContents
+Columns("J:L").Select
+Selection.ClearContents
+Columns("N:U").Select
+Selection.ClearContents
+Range("F1").Select
+    
+'Con estas lineas acomodamos los datos
+Columns("M:M").Select
+Selection.Copy
+Columns("J:J").Select
+ActiveSheet.Paste
+Columns("M:M").Select
+Application.CutCopyMode = False
+Selection.ClearContents
+Columns("F:J").Select
+Selection.Copy
+Columns("A:A").Select
+ActiveSheet.Paste
+Columns("F:K").Select
+Application.CutCopyMode = False
+Selection.ClearContents
+Range("A1").Select
+
+'Nombres de los productos y formato
+Range("G1").Select
+ActiveCell.FormulaR1C1 = "Regular"
+Range("H1").Select
+ActiveCell.FormulaR1C1 = "Premium"
+Range("I1").Select
+ActiveCell.FormulaR1C1 = "Diesel"
+Range("J1").Select
+ActiveCell.FormulaR1C1 = "DryStock"
+Range("K1").Select
+ActiveCell.FormulaR1C1 = "Ventas Mes"
+Range("L1").Select
+ActiveCell.FormulaR1C1 = "Total"
+Range("M1").Select
+ActiveCell.FormulaR1C1 = "Total Sin IVA"
+Range("M2").Select
+
+Columns("E:E").Select
+Columns("E:E").EntireColumn.AutoFit
+
+Range("G2:M2").Select
+Selection.NumberFormat = "0.00"
+Selection.Style = "Comma"
+    
+'Variables FG
+Dim Datos() As Variant
+Dim Filas As Variant
+Dim Columnas As Variant
+Dim Contador As Variant
+Dim SumaTotal As Variant
+Dim SumaVentas As Variant
+Dim SumaDrystock As Variant
+Dim SumaDiesel As Variant
+Dim SumaPremium As Variant
+Dim SumaRegular As Variant
+
+Dim TotalSinIVA As Variant
+Dim SumaDryStockSinIVA As Variant
+Dim SumaDieselSinIVA As Variant
+Dim SumaPremiumSinIVA As Variant
+Dim SumaRegularSinIVA As Variant
+
+Datos = Range("A1").CurrentRegion
+Filas = UBound(Datos)
+Columnas = UBound(Datos, 2)
+
+'Obtener total
+For Contador = 2 To Filas
+    If Datos(Contador, 3) <> "" Then
+    SumaTotal = SumaTotal + Datos(Contador, 4)
+    End If
+Next Contador
+Range("L2").Value = SumaTotal
+If Range("L2").Value = SumaTotal Then GoTo VentasMes
+
+'Obtener ventas del mes
+VentasMes:
+For Contador = 2 To Filas
+    If Datos(Contador, 5) <> "" Then
+    SumaVentas = SumaVentas + Datos(Contador, 4)
+    End If
+Next Contador
+Range("K2").Value = SumaVentas
+If Range("K2").Value = SumaVentas Then GoTo Diesel
+
+'Obtener Diesel
+Diesel:
+For Contador = 2 To Filas
+    If Datos(Contador, 5) = "" And Datos(Contador, 1) = "BP DIESEL � MX" Then
+    SumaDiesel = SumaDiesel + Datos(Contador, 4)
+    End If
+Next Contador
+Range("I2").Value = SumaDiesel
+If Range("I2").Value = SumaDiesel Then GoTo Premium
+ 
+ 'Obtener Premium
+Premium:
+For Contador = 2 To Filas
+    If Datos(Contador, 5) = "" And Datos(Contador, 1) = "BP PREMIUM 91 O SUPERIOR � MX" Then
+    SumaPremium = SumaPremium + Datos(Contador, 4)
+    End If
+Next Contador
+Range("H2").Value = SumaPremium
+If Range("H2").Value = SumaPremium Then GoTo Regular
+ 
+ 'Obtener Regular
+Regular:
+For Contador = 2 To Filas
+    If Datos(Contador, 5) = "" And Datos(Contador, 1) = "BP REGULAR 87 � MX" Then
+    SumaRegular = SumaRegular + Datos(Contador, 4)
+    End If
+Next Contador
+Range("G2").Value = SumaRegular
+If Range("G2").Value = SumaRegular Then GoTo DryStock
+
+'Obtener DryStock
+DryStock:
+    SumaDrystock = SumaTotal - SumaVentas - SumaDiesel - SumaPremium - SumaRegular
+Range("J2").Value = SumaDrystock
+If Range("J2").Value = SumaDrystock Then GoTo DryStockSinIVA
+
+'Obtener DryStock Sin IVA
+DryStockSinIVA:
+For Contador = 2 To Filas
+    If Datos(Contador, 1) <> "BP REGULAR 87 � MX" And Datos(Contador, 1) <> "BP PREMIUM 91 O SUPERIOR � MX" And Datos(Contador, 1) <> "BP DIESEL � MX" Then
+    SumaDryStockSinIVA = SumaDryStockSinIVA + ((Datos(Contador, 3) / 1.16) * Datos(Contador, 2))
+    
+    End If
+Next Contador
+Range("J3").Value = SumaDryStockSinIVA
+
+'Obtener Diesel Sin IVA
+DieselSinIVA:
+For Contador = 2 To Filas
+    If Datos(Contador, 1) = "BP DIESEL � MX" Then
+    SumaDieselSinIVA = SumaDieselSinIVA + (((((Datos(Contador, 3)) - 0.43363) / 1.16) + 0.43363) * Datos(Contador, 2))
+    End If
+Next Contador
+Range("I3").Value = SumaDieselSinIVA
+If Range("I3").Value = SumaDieselSinIVA Then GoTo PremiumSinIVA
+
+'Obtener Premium Sin IVA
+PremiumSinIVA:
+For Contador = 2 To Filas
+    If Datos(Contador, 1) = "BP PREMIUM 91 O SUPERIOR � MX" Then
+    SumaPremiumSinIVA = SumaPremiumSinIVA + (((((Datos(Contador, 3)) - 0.63752) / 1.16) + 0.63752) * Datos(Contador, 2))
+    End If
+Next Contador
+Range("H3").Value = SumaPremiumSinIVA
+If Range("H3").Value = SumaPremiumSinIVA Then GoTo RegularSinIVA
+
+'Obtener Regular Sin IVA
+RegularSinIVA:
+For Contador = 2 To Filas
+    If Datos(Contador, 1) = "BP REGULAR 87 � MX" Then
+    SumaRegularSinIVA = SumaRegularSinIVA + (((((Datos(Contador, 3)) - 0.52248) / 1.16) + 0.52248) * Datos(Contador, 2))
+    End If
+Next Contador
+Range("G3").Value = SumaRegularSinIVA
+If Range("G3").Value = SumaRegularSinIVA Then GoTo TotalSinIVA:
+
+'Obtener Total Sin IVA
+TotalSinIVA:
+TotalSinIVA = SumaDryStockSinIVA + SumaDieselSinIVA + SumaPremiumSinIVA + SumaRegularSinIVA
+Range("M2").Value = TotalSinIVA
+
+'Formatito datos
+Columns("G:M").Select
+Columns("G:M").EntireColumn.AutoFit
+
+'Colorcito identificador
+Range("G3:J3").Select
+With Selection.Interior
+        .Pattern = xlSolid
+        .PatternColorIndex = xlAutomatic
+        .Color = 5296274 '65535
+End With
+
+'Copiado
+Range("G2:M2").Select
+Selection.Copy
+    
+End Sub
+

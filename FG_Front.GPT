@@ -1,0 +1,87 @@
+Attribute VB_Name = "Module1"
+Sub FG_INT()
+    Attribute FG_INT.VB_ProcData.VB_Invoke_Func = " \n14"
+    
+    ' BORRAMOS LAS COLUMNAS INNECESARIAS
+    Range("A1:E1").ClearContents
+    Columns("J:L").ClearContents
+    Columns("N:U").ClearContents
+    
+    ' REORDENAMOS LOS DATOS
+    Columns("M:M").Copy Destination:=Columns("J:J")
+    Columns("M:M").ClearContents
+    Columns("F:J").Copy Destination:=Columns("A:A")
+    Columns("F:K").ClearContents
+
+    ' NOMBRES Y FORMATO
+    Range("G1").Value = "Regular"
+    Range("H1").Value = "Premium"
+    Range("I1").Value = "Diesel"
+    Range("J1").Value = "DryStock"
+    Range("K1").Value = "Ventas Mes"
+    Range("L1").Value = "Total"
+    Range("M1").Value = "Total Sin IVA"
+
+    Columns("E:E").EntireColumn.AutoFit
+    Range("G2:M2").NumberFormat = "0.00"
+    Range("G2:M2").Style = "Comma"
+
+    ' VARIABLES DECLARADAS
+    Dim Datos() As Variant
+    Dim Filas As Long
+    Dim Columnas As Long
+    Dim Contador As Long
+    Dim SumaTotal As Double
+    Dim SumaVentas As Double
+    Dim SumaDrystock As Double
+    Dim SumaDiesel As Double
+    Dim SumaPremium As Double
+    Dim SumaRegular As Double
+    Dim TotalSinIVA As Double
+    Dim SumaDryStockSinIVA As Double
+    Dim SumaDieselSinIVA As Double
+    Dim SumaPremiumSinIVA As Double
+    Dim SumaRegularSinIVA As Double
+
+    Datos = Range("A1").CurrentRegion
+    Filas = UBound(Datos)
+    Columnas = UBound(Datos, 2)
+
+    ' CALCULAMOS LOS TOTALES Y SIN IVA
+    For Contador = 2 To Filas
+        SumaTotal = SumaTotal + Datos(Contador, 4)
+        Select Case Datos(Contador, 1)
+            Case "BP DIESEL � MX"
+                SumaDiesel = SumaDiesel + Datos(Contador, 4)
+                SumaDieselSinIVA = SumaDieselSinIVA + (((((Datos(Contador, 3)) - 0.43363) / 1.16) + 0.43363) * Datos(Contador, 2))
+            Case "BP PREMIUM 91 O SUPERIOR � MX"
+                SumaPremium = SumaPremium + Datos(Contador, 4)
+                SumaPremiumSinIVA = SumaPremiumSinIVA + (((((Datos(Contador, 3)) - 0.63752) / 1.16) + 0.63752) * Datos(Contador, 2))
+            Case "BP REGULAR 87 � MX"
+                SumaRegular = SumaRegular + Datos(Contador, 4)
+                SumaRegularSinIVA = SumaRegularSinIVA + (((((Datos(Contador, 3)) - 0.52248) / 1.16) + 0.52248) * Datos(Contador, 2))
+            Case Else
+                SumaDryStockSinIVA = SumaDryStockSinIVA + ((Datos(Contador, 3) / 1.16) * Datos(Contador, 2))
+        End Select
+    Next Contador
+
+    SumaDrystock = SumaTotal - SumaVentas - SumaDiesel - SumaPremium - SumaRegular
+    TotalSinIVA = SumaDryStockSinIVA + SumaDieselSinIVA + SumaPremiumSinIVA + SumaRegularSinIVA
+
+    ' RESULTADOS
+    Range("G2").Value = SumaRegular
+    Range("H2").Value = SumaPremium
+    Range("I2").Value = SumaDiesel
+    Range("J2").Value = SumaDrystock
+    Range("K2").Value = SumaVentas
+    Range("L2").Value = SumaTotal
+    Range("M2").Value = TotalSinIVA
+
+    ' FORMATEAR Y DESTACAR RESULTADOS
+    Columns("G:M").EntireColumn.AutoFit
+    With Range("G3:J3").Interior
+        .Pattern = xlSolid
+        .Color = 5296274
+    End With
+    
+End Sub

@@ -1,4 +1,3 @@
-FG_MENU
 'Variables
 Dim Carpeta_FG As String   'Retiene la ruta de la carpeta seleccionada
 Dim Nombre_Archivo As String    'Retiene el nombre del archivo abierto
